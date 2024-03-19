@@ -4,7 +4,8 @@ const MEM_SIZE: u16 = 0x1000;
 
 #[derive(Copy, Clone)]
 pub struct Addr<T, const MAX: usize>(pub T)
-where T: Copy + Clone + Add + Eq + PartialOrd + Into<usize>;
+where
+    T: Copy + Clone + Add + Eq + PartialOrd + Into<usize>;
 
 impl<const MAX: usize> From<u16> for Addr<u16, MAX> {
     fn from(value: u16) -> Self {
@@ -31,22 +32,26 @@ impl<const MAX: usize> Into<usize> for Addr<u16, MAX> {
 }
 
 impl<T, const MAX: usize> Add for Addr<T, MAX>
-where T: Copy + Clone + Add<Output = T> + Eq + PartialOrd + Into<usize> {
+where
+    T: Copy + Clone + Add<Output = T> + Eq + PartialOrd + Into<usize>,
+{
     type Output = Addr<T, MAX>;
     fn add(self, rhs: Addr<T, MAX>) -> Addr<T, MAX> {
         Addr(self.0 + Addr::from(rhs).0)
     }
 }
 
-impl<T, const MAX: usize> Addr<T, MAX> 
-where T: Copy + Clone + Add<Output = T> + Eq + PartialOrd + Into<usize> {
+impl<T, const MAX: usize> Addr<T, MAX>
+where
+    T: Copy + Clone + Add<Output = T> + Eq + PartialOrd + Into<usize>,
+{
     pub fn is_overflow(&self) -> bool {
         self.0.into() >= MAX
     }
 }
 
 pub struct Memory<const MAX: usize> {
-    bytes: [u8; MAX]
+    bytes: [u8; MAX],
 }
 
 impl<const MAX: usize> Memory<MAX> {
@@ -62,9 +67,9 @@ impl<const MAX: usize> Memory<MAX> {
         self.bytes[<Addr<u16, MAX> as Into<usize>>::into(*addr)] = byte;
     }
 
-    pub fn read_block<const Len: usize>(&self, start_addr: &Addr<u16, MAX>) -> [u8; Len] {
-        let mut output: [u8; Len] = [0u8; Len];
-        for i in 0..Len {
+    pub fn read_block<const LEN: usize>(&self, start_addr: &Addr<u16, MAX>) -> [u8; LEN] {
+        let mut output: [u8; LEN] = [0u8; LEN];
+        for i in 0..LEN {
             let bounds_checked: usize = Addr::<u16, MAX>::from(i).into();
             output[bounds_checked] = self.read(&(*start_addr + Addr::<_, MAX>::from(i as u16)));
         }
@@ -72,13 +77,13 @@ impl<const MAX: usize> Memory<MAX> {
         output
     }
 
-    pub fn write_block<const Len: usize>(&mut self, start_addr: &Addr<u16, MAX>, data: [u8; Len]) {
-        for i in 0..Len {
+    pub fn write_block<const LEN: usize>(&mut self, start_addr: &Addr<u16, MAX>, data: [u8; LEN]) {
+        for i in 0..LEN {
             self.write(&(*start_addr + Addr::from(i)), data[i]);
         }
     }
 
     pub fn get_display_block(&self) -> [u8; 256] {
-        return self.read_block(start_block, 0xFF).
+        self.read_block::<0x100>(&Addr::<u16, MAX>::from(0xF00usize))
     }
 }

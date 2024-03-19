@@ -1,7 +1,7 @@
-use std::ops::{Add, Sub}};
+use std::ops::Sub;
 
 use crate::mem::Addr;
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 
 impl<const MAX: usize> From<usize> for Addr<u8, MAX> {
     fn from(value: usize) -> Self {
@@ -28,11 +28,17 @@ impl<const MAX: usize> Sub for Addr<u8, MAX> {
     }
 }
 
+impl<const MAX: usize> From<u8> for Addr<u8, MAX> {
+    fn from(value: u8) -> Self {
+        Self(value)
+    }
+}
+
 #[derive(Copy, Clone)]
 #[repr(u32)]
 enum ProgramCounter<const M_MAX: usize> {
     Empty,
-    Pc(Addr<u16, M_MAX>)
+    Pc(Addr<u16, M_MAX>),
 }
 
 pub struct Stack<const M_MAX: usize, const S_MAX: usize> {
@@ -44,7 +50,7 @@ impl<const M_MAX: usize, const S_MAX: usize> Stack<M_MAX, S_MAX> {
     pub fn init() -> Self {
         Self {
             program_counters: [ProgramCounter::<M_MAX>::Empty; S_MAX],
-            ptr: Addr::<u8, S_MAX>(0)
+            ptr: Addr::<u8, S_MAX>(0),
         }
     }
 
@@ -60,9 +66,14 @@ impl<const M_MAX: usize, const S_MAX: usize> Stack<M_MAX, S_MAX> {
     }
 
     pub fn pop(&mut self) -> Result<Addr<u16, M_MAX>> {
-        let idx: Addr<u16, M_MAX> =  Addr::<u16, M_MAX>::from(1usize);
-        let top_pc = self.program_counters[idx.into()];
-        self.program_counters[idx.into()] = ProgramCounter::Empty;
-        top_pc
+        let idx: Addr<u8, S_MAX> = self.ptr - Addr::<u8, S_MAX>::from(1usize);
+        let accessor: usize = idx.into();
+        let top_pc = self.program_counters[accessor];
+        self.program_counters[accessor] = ProgramCounter::Empty;
+
+        match top_pc {
+            ProgramCounter::Pc(addr) => Ok(addr),
+            ProgramCounter::Empty => Err(anyhow!("Stack underflow")),
+        }
     }
 }
