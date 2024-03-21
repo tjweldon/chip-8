@@ -4,7 +4,7 @@ use crate::mem::Addr;
 type MemAddr = Addr<u16, MEMORY_SIZE>;
 type RegIdx = Addr<u8, 16>;
 
-enum Opcode {
+pub enum Opcode {
     SYS(MemAddr),
     CLS,
     RET,
