@@ -67,23 +67,25 @@ impl<const MAX: usize> Memory<MAX> {
         self.bytes[<Addr<u16, MAX> as Into<usize>>::into(*addr)] = byte;
     }
 
-    pub fn read_block<const LEN: usize>(&self, start_addr: &Addr<u16, MAX>) -> [u8; LEN] {
-        let mut output: [u8; LEN] = [0u8; LEN];
-        for i in 0..LEN {
-            let bounds_checked: usize = Addr::<u16, MAX>::from(i).into();
-            output[bounds_checked] = self.read(&(*start_addr + Addr::<_, MAX>::from(i as u16)));
-        }
-
-        output
+    pub fn read_block(&self, start_addr: Addr<u16, MAX>, len: usize) -> &[u8] {
+        let start: usize = start_addr.into();
+        let stop: usize = (start + len).min(MAX);
+        
+        &self.bytes[start..stop]
     }
 
-    pub fn write_block<const LEN: usize>(&mut self, start_addr: &Addr<u16, MAX>, data: [u8; LEN]) {
-        for i in 0..LEN {
+    pub fn write_block(&mut self, start_addr: &Addr<u16, MAX>, data: &[u8]) {
+        for i in 0..data.len().min(MAX) {
             self.write(&(*start_addr + Addr::from(i)), data[i]);
         }
     }
 
     pub fn get_display_block(&self) -> [u8; 256] {
-        self.read_block::<0x100>(&Addr::<u16, MAX>::from(0xF00usize))
+        let mut result = [0u8; 256];
+        for (i, &byte) in self.read_block(Addr::<u16, MAX>::from(0xF00usize), 0x100).iter().enumerate() {
+            result[i] = byte;
+        }
+
+        result
     }
 }

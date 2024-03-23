@@ -1,9 +1,10 @@
-use std::ops::Add;
+use std::{ops::Add, process::id};
 use crate::{
     mem::{Addr, Memory},
     stack::Stack,
     opcodes::Opcode
 };
+use rand::prelude::*;
 use crate::screen::Screen;
 use anyhow::{Result, anyhow};
 
@@ -25,15 +26,18 @@ pub struct Chip {
 
 impl Chip {
     fn set_reg(&mut self, idx: Addr<u8, 16>, value: u8) {
-        self.registers[idx.into()] = value;
+        let reg: usize = idx.into();
+        self.registers.v[reg] = value;
     }
 
     fn get_reg(&self, idx: Addr<u8, 16>) -> u8 {
-        self.registers.v[idx.into()]
+        let reg: usize = idx.into();
+        self.registers.v[reg]
     }
 
     fn consume_opcode(&mut self, opcode: Opcode) -> Result<()> {
         use Opcode::*;
+        let mut rng = rand::thread_rng();
         let mut next_pc: Addr<u16, MEMORY_SIZE> = Addr(1) + self.pc;
         match opcode {
             CLS => {
@@ -96,10 +100,36 @@ impl Chip {
                 self.set_reg(reg_a, result);
                 self.set_reg(Addr(0xF), match underflow { true => 0, false => 1 })
             }
+            RSUBN(reg_a, reg_b) => {
+                let (result, underflow) = self
+                    .get_reg(reg_b)
+                    .overflowing_sub(self.get_reg(reg_a));
+                self.set_reg(reg_a, result);
+                self.set_reg(Addr(0xF), match underflow { true => 0, false => 1 })
+            }
             SHR(reg) => {
                 let byte = self.get_reg(reg);
                 self.set_reg(Addr(0xF), byte & 0b0000_0001);
                 self.set_reg(reg, byte >> 1);
+            }
+            SHL(reg) => {
+                let byte = self.get_reg(reg);
+                self.set_reg(Addr(0xF), byte >> 7);
+                self.set_reg(reg, byte << 1);
+            }
+            RND(reg, mask) => {
+                let random: u8 = rng.gen();
+                self.set_reg(reg, random & mask);
+            }
+            DRW(x, y, sprite_len) => {
+                let sprite_start = self.registers.i.clone();
+                let (x, y): (u8, u8) = (x.into(), y.into());
+                let sprite_data =self.memory.read_block(sprite_start, sprite_len as usize); 
+                let overlap: u8 = match self.screen.blit_sprite(sprite_data, (x, y)) {
+                    true => 0x01,
+                    false => 0x00,
+                };
+                self.set_reg(Addr(0xF), overlap);
             }
             _ => {}
         }

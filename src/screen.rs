@@ -10,10 +10,10 @@ impl Screen {
     }
 
     fn bit(byte: &u8, idx: usize) -> u8 {
-        let idx = 7 - idx;
-        if idx < 0 {
+        let Some(idx) = 7usize.checked_sub(idx) else {
             return 0;
-        }
+        };
+        
 
         (byte >> idx) & 0b0000_0001
     }
@@ -22,7 +22,7 @@ impl Screen {
         let (top, left) = left_top;
         let mut overlap = false;
         for (dy, line) in sprite.iter().enumerate() {
-            let y = (top + dy) as usize;
+            let y = dy + top as usize;
 
             for dx in 0..8 {
                 let x: usize = (left + dx) as usize;
@@ -37,7 +37,7 @@ impl Screen {
             }
         }
 
-        return overlap;
+        overlap
     }
 
     pub fn clear(&mut self) {

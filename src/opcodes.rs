@@ -5,50 +5,82 @@ type MemAddr = Addr<u16, MEMORY_SIZE>;
 type RegIdx = Addr<u8, 16>;
 
 pub enum Opcode {
+    /// Unused
     SYS(MemAddr),
+    
+    /// Clear Screen
     CLS,
+    /// Return
     RET,
+    /// Jump
     JP(MemAddr),
+    /// Jump Relative to Register V0
     JPV0(MemAddr),
+    /// Call Subroutine
     CALL(MemAddr),
 
+    /// Skip if Equal, Immediate
     ISE(RegIdx, u8),
+    /// Skip if Not Equal, Immediate
     ISNE(RegIdx, u8),
+
+    /// Skip if Equal, Register
     RSE(RegIdx, RegIdx),
+    /// Skip if Not Equal, Register
     RSNE(RegIdx, RegIdx),
 
+    /// Load, Immediate
     ILD(RegIdx, u8),
+    /// Load, Register
     RLD(RegIdx, RegIdx),
+    /// Load Register I, Reference
     LDI(MemAddr),
 
+    /// Accumulate Register, Immediate
     IADD(RegIdx, u8),
+    /// Accumulate Register, Register
     RADD(RegIdx, RegIdx),
+    /// Todo
     ADDI(RegIdx),
 
+    /// OR Into Register, Register
     ROR(RegIdx, RegIdx),
-    RAND(RegIdx, RegIdx),
-    RXOR(RegIdx, RegIdx),
-    RSUB(RegIdx, RegIdx),
 
+    /// AND Into Register, Register
+    RAND(RegIdx, RegIdx),
+    /// XOR Into Register, Register
+    RXOR(RegIdx, RegIdx),
+    /// Subtract from register, Register
+    RSUB(RegIdx, RegIdx),
+    /// As Above, opposite sign
+    RSUBN(RegIdx, RegIdx),
+    
+    /// Shift Register Right
     SHR(RegIdx),
+    /// Shift Register Left
     SHL(RegIdx),
 
-    RSUBN(RegIdx, RegIdx),
-
+    /// Generate a random number, & with byte
     RND(RegIdx, u8),
+    /// Draw Sprite
     DRW(RegIdx, RegIdx, u8),
 
+    /// Skip the next instruction if key pressed
     SKP(RegIdx),
+    /// Skip the next instruction if key not pressed
     SKNP(RegIdx),
 
+    /// timer instructions 
     LDDT(RegIdx),
     SETDT(RegIdx),
     SETST(RegIdx),
     LDK(RegIdx),
     LDFI(RegIdx),
     LDBCD(RegIdx),
-
+    
+    /// Core Dump
     DUMP(RegIdx),
+    /// Core Load
     LOAD(RegIdx),
 }
 
