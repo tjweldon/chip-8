@@ -1,12 +1,9 @@
-use std::{ops::Add, process::id};
 use crate::{
-    mem::{Addr, Memory},
-    stack::Stack,
-    opcodes::Opcode
+    keyboard::Keyboard, mem::{Addr, Memory}, opcodes::Opcode, stack::Stack
 };
 use rand::prelude::*;
 use crate::screen::Screen;
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 
 pub const MEMORY_SIZE: usize = 4096;
 pub const STACK_SIZE: usize = 16;
@@ -21,7 +18,8 @@ pub struct Chip {
     stack: Stack<MEMORY_SIZE, STACK_SIZE>,
     registers: Registers,
     pc: Addr<u16, MEMORY_SIZE>,
-    screen: Screen
+    screen: Screen,
+    keyboard: Keyboard,
 }
 
 impl Chip {
@@ -130,6 +128,16 @@ impl Chip {
                     false => 0x00,
                 };
                 self.set_reg(Addr(0xF), overlap);
+            }
+            SKP(key) => {
+                if self.keyboard.key_is_pressed(key) {
+                    next_pc = next_pc + Addr(1);
+                }
+            }
+            SKNP(key) => {
+                if !self.keyboard.key_is_pressed(key) {
+                    next_pc = next_pc + Addr(1);
+                }
             }
             _ => {}
         }
