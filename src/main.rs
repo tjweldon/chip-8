@@ -1,3 +1,6 @@
+use chip_8::chip::Chip;
+
 fn main() {
-    println!("Hello, world!");
+    let chip = Chip::init();
+    dbg!(chip);
 }

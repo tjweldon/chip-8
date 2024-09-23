@@ -1,5 +1,7 @@
+use std::fmt::Debug;
+
 use crate::{
-    keyboard::Keyboard, mem::{Addr, Memory}, opcodes::Opcode, stack::Stack
+    clock::Clock, keyboard::Keyboard, mem::{Addr, Memory}, opcodes::Opcode, stack::Stack
 };
 use rand::prelude::*;
 use crate::screen::Screen;
@@ -13,6 +15,15 @@ pub struct Registers {
     pub i: Addr<u16, MEMORY_SIZE>,
 }
 
+impl Registers {
+    pub fn init() -> Self {
+        Self {
+            v: [0u8; 16],
+            i: Addr::<u16, MEMORY_SIZE>::from(0u16),
+        }
+    }
+}
+
 pub struct Chip {
     memory: Memory<MEMORY_SIZE>,
     stack: Stack<MEMORY_SIZE, STACK_SIZE>,
@@ -20,9 +31,22 @@ pub struct Chip {
     pc: Addr<u16, MEMORY_SIZE>,
     screen: Screen,
     keyboard: Keyboard,
+    clock: Clock
 }
 
 impl Chip {
+    pub fn init() -> Self {
+        Self {
+            memory: Memory::<MEMORY_SIZE>::init(),
+            stack: Stack::<MEMORY_SIZE, STACK_SIZE>::init(),
+            registers: Registers::init(),
+            pc: Addr::<u16, MEMORY_SIZE>::from(0x200u16),
+            screen: Screen::init(),
+            keyboard: Keyboard::init(),
+            clock: Clock::init(60.0)
+        }
+    }
+
     fn set_reg(&mut self, idx: Addr<u8, 16>, value: u8) {
         let reg: usize = idx.into();
         self.registers.v[reg] = value;
@@ -146,3 +170,4 @@ impl Chip {
         Ok(())
     }
 }
+

@@ -3,7 +3,7 @@ pub struct Screen {
 }
 
 impl Screen {
-    fn init() -> Self {
+    pub fn init() -> Self {
         Screen {
             pixels: [[0; 64]; 32]
         }
